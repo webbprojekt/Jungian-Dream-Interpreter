@@ -55,34 +55,46 @@ export class JournalService {
     this.saveJournal();
   }
 
-  async exportAllToWord(): Promise<void> {
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun } = docx;
-    const entries = this.journal();
+  async exportSingleEntryToWord(entry: JournalEntry): Promise<void> {
+    const blob = await this.createDocxBlob([entry]);
+    this.downloadBlob(blob, `${entry.analysis.title.replace(/ /g, '_')}.docx`);
+  }
 
+  async exportAllToWord(): Promise<void> {
+    const entries = this.journal();
     if (entries.length === 0) {
       alert('Your journal is empty. Nothing to export.');
       return;
     }
+    const blob = await this.createDocxBlob(entries);
+    this.downloadBlob(blob, `Dream_Journal_Export_${new Date().toISOString().split('T')[0]}.docx`);
+  }
+  
+  private downloadBlob(blob: Blob, fileName: string): void {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+  }
+
+  private async createDocxBlob(entries: JournalEntry[]): Promise<Blob> {
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun } = docx;
 
     const docChildren: any[] = [];
 
     for (const [index, entryData] of entries.entries()) {
-      // Add page break before all entries except the first one
       if (index > 0) {
         docChildren.push(new Paragraph({ pageBreakBefore: true }));
       }
       
-      // Fetch and prepare image
       let imageParagraph;
       try {
         const response = await fetch(entryData.imageUrl);
-        const blob = await response.blob();
-        const imageBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as ArrayBuffer);
-            reader.onerror = reject;
-            reader.readAsArrayBuffer(blob);
-        });
+        const imageBuffer = await response.arrayBuffer();
         imageParagraph = new Paragraph({
              children: [new ImageRun({ data: imageBuffer, transformation: { width: 400, height: 400 } })]
         });
@@ -93,8 +105,6 @@ export class JournalService {
         });
       }
 
-
-      // Add content for the entry
       docChildren.push(
         new Paragraph({
           text: entryData.analysis.title,
@@ -132,15 +142,6 @@ export class JournalService {
       }],
     });
 
-    Packer.toBlob(doc).then(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Dream_Journal_Export_${new Date().toISOString().split('T')[0]}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
+    return Packer.toBlob(doc);
   }
 }

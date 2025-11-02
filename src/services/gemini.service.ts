@@ -27,7 +27,7 @@ export class GeminiService {
       type: Type.OBJECT,
       properties: {
         title: { type: Type.STRING, description: 'A creative, insightful title for the dream analysis.' },
-        article: { type: Type.STRING, description: 'A detailed, 400+ word article interpreting the dream in Markdown. Discuss symbols, archetypes (Shadow, Anima/Animus), and individuation.' },
+        article: { type: Type.STRING, description: 'A detailed, 400+ word article interpreting the dream in Markdown. The article must include several sub-headlines (using ## Markdown syntax) to structure the analysis. Discuss symbols, archetypes (Shadow, Anima/Animus), and individuation.' },
         jungianConcepts: {
           type: Type.ARRAY,
           items: {

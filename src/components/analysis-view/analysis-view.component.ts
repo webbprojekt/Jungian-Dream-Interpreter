@@ -1,13 +1,9 @@
-
-
 import { Component, ChangeDetectionStrategy, input, output, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { JournalEntry } from '../../models/dream';
 import { TtsService } from '../../services/tts.service';
+import { JournalService } from '../../services/journal.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-
-// Declare the docx global object provided by the script in index.html
-declare var docx: any;
 
 @Component({
   selector: 'app-analysis-view',
@@ -24,8 +20,10 @@ export class AnalysisViewComponent {
 
   ttsService = inject(TtsService);
   sanitizer = inject(DomSanitizer);
+  journalService = inject(JournalService);
   
   activeAccordion = signal<string | null>(null);
+  isExporting = signal(false);
 
   formattedArticle = computed((): SafeHtml => {
     const article = this.entry().analysis.article;
@@ -98,61 +96,15 @@ export class AnalysisViewComponent {
   }
 
   async exportToWord(): Promise<void> {
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun } = docx;
-    const entryData = this.entry();
-    
-    // Fetch image and convert to buffer
-    const response = await fetch(entryData.imageUrl);
-    const blob = await response.blob();
-    const imageBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as ArrayBuffer);
-        reader.onerror = reject;
-        reader.readAsArrayBuffer(blob);
-    });
-
-    const doc = new Document({
-      sections: [{
-        children: [
-          new Paragraph({
-            text: entryData.analysis.title,
-            heading: HeadingLevel.TITLE,
-          }),
-          new Paragraph({
-             children: [new TextRun({ text: `Dream Date: ${new Date(entryData.date).toLocaleDateString()}`, italics: true })]
-          }),
-          new Paragraph({
-             children: [new ImageRun({ data: imageBuffer, transformation: { width: 400, height: 400 } })]
-          }),
-          new Paragraph({ text: "Your Dream:", heading: HeadingLevel.HEADING_1 }),
-          new Paragraph({ text: entryData.dreamText }),
-          new Paragraph({ text: "Interpretation:", heading: HeadingLevel.HEADING_1 }),
-          ...entryData.analysis.article.split('\n').map(p => new Paragraph(p)),
-
-          new Paragraph({ text: "Key Jungian Concepts", heading: HeadingLevel.HEADING_1 }),
-          ...entryData.analysis.jungianConcepts.flatMap(c => [
-            new Paragraph({ text: c.term, heading: HeadingLevel.HEADING_2 }),
-            new Paragraph(c.explanation)
-          ]),
-
-          new Paragraph({ text: "Mythological Parallels", heading: HeadingLevel.HEADING_1 }),
-          ...entryData.analysis.mythologicalConnections.flatMap(m => [
-            new Paragraph({ text: m.parallel, heading: HeadingLevel.HEADING_2 }),
-            new Paragraph(m.explanation)
-          ]),
-        ],
-      }],
-    });
-
-    Packer.toBlob(doc).then(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${entryData.analysis.title.replace(/ /g, '_')}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
+    if (this.isExporting()) return;
+    this.isExporting.set(true);
+    try {
+      await this.journalService.exportSingleEntryToWord(this.entry());
+    } catch (e) {
+      console.error('Failed to export entry:', e);
+      alert('An error occurred while exporting your journal. Please try again.');
+    } finally {
+      this.isExporting.set(false);
+    }
   }
 }
