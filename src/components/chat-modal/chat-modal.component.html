@@ -1,0 +1,70 @@
+
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col">
+    <!-- Header -->
+    <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+      <h2 class="font-serif text-2xl font-bold text-gray-800 dark:text-white">Chat with Your Dream</h2>
+      <button (click)="closeModal()" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Chat History -->
+    <div #chatContainer class="flex-1 p-4 overflow-y-auto space-y-4">
+      @for(message of messages(); track $index) {
+        <div class="flex" [class]="message.role === 'user' ? 'justify-end' : 'justify-start'">
+          <div 
+            class="max-w-md p-3 rounded-lg"
+            [class]="message.role === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none'">
+            {{ message.text }}
+          </div>
+        </div>
+      }
+      @if(isThinking()) {
+        <div class="flex justify-start">
+            <div class="max-w-md p-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none">
+                <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-pulse [animation-delay:-0.3s]"></div>
+                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-pulse [animation-delay:-0.15s]"></div>
+                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-pulse"></div>
+                </div>
+            </div>
+        </div>
+      }
+    </div>
+
+    <!-- Input Form -->
+    <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+      <form (submit)="sendMessage()" class="flex items-center space-x-2">
+        <input 
+          type="text" 
+          [(ngModel)]="userInput"
+          name="userInput"
+          [disabled]="isThinking()"
+          placeholder="Ask a question..."
+          class="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 transition-colors">
+        <button 
+            type="button" 
+            (click)="toggleRecording()" 
+            [disabled]="isThinking()" 
+            [title]="isRecording() ? 'Stop Recording' : 'Ask with Voice'"
+            class="p-2 rounded-full transition-colors"
+            [class]="isRecording() ? 'bg-red-500 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50'">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m12 7.5v-1.5a6 6 0 0 0-6-6m-6 6a6 6 0 0 0 6-6m-6 6H4.5m6 0h1.5m6 0H19.5m-15-6.75v.653a5.96 5.96 0 0 0 4.5 5.65m7.5-5.65v.653a5.96 5.96 0 0 1-4.5 5.65m0 0a5.965 5.965 0 0 1-4.5-5.65" />
+            </svg>
+        </button>
+        <button 
+          type="submit" 
+          [disabled]="isThinking() || !userInput().trim()"
+          class="bg-indigo-600 text-white p-2 rounded-full hover:bg-indigo-700 disabled:bg-indigo-300 dark:disabled:bg-indigo-800 disabled:cursor-not-allowed transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

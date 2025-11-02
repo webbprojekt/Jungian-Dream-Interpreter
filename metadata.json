@@ -1,0 +1,7 @@
+{
+  "name": "Jungian Dream Interpreter",
+  "description": "An AI-powered web application to analyze your dreams based on Jungian psychology, generate symbolic art, and allow you to conversationally explore your dream's meaning.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

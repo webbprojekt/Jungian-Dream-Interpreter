@@ -1,0 +1,60 @@
+
+<!-- Main container with theme-based text colors -->
+<main class="text-gray-800 dark:text-gray-200 min-h-screen transition-colors duration-300">
+  
+  <!-- Theme Toggle Button -->
+  <div class="absolute top-4 right-4 z-10">
+    <button (click)="themeService.toggleTheme()" [title]="themeService.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'" class="p-2 rounded-full bg-gray-200/50 dark:bg-gray-700/50 hover:bg-gray-300/80 dark:hover:bg-gray-600/80 backdrop-blur-sm transition-colors">
+      @if (themeService.isDark()) {
+        <!-- Sun icon for dark mode -->
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-yellow-300">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+        </svg>
+      } @else {
+        <!-- Moon icon for light mode -->
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-indigo-700">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+        </svg>
+      }
+    </button>
+  </div>
+  
+  <!-- View Renderer -->
+  <div>
+    @if (view() === 'input') {
+      <app-dream-input (newDream)="onNewDream($event)" (viewEntry)="onViewEntry($event)"></app-dream-input>
+    }
+    @if (view() === 'analysis' && currentEntry()) {
+      <app-analysis-view [entry]="currentEntry()!" (back)="backToInput()" (openChat)="openChatModal()"></app-analysis-view>
+    }
+  </div>
+
+  <!-- Loading Overlay -->
+  @if (isLoading()) {
+    <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-md flex flex-col items-center justify-center z-50 transition-opacity duration-300">
+      <!-- Spinner -->
+      <svg class="animate-spin h-12 w-12 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <!-- Loading Message -->
+      <p class="text-white text-lg font-medium">{{ loadingMessage() }}</p>
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (errorMessage()) {
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg z-50">
+      <strong class="font-bold">Error: </strong>
+      <span class="block sm:inline">{{ errorMessage() }}</span>
+      <button (click)="errorMessage.set('')" class="absolute top-0 bottom-0 right-0 px-4 py-3">
+        <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
+      </button>
+    </div>
+  }
+
+  <!-- Chat Modal -->
+  @if(isChatOpen() && currentEntry()) {
+    <app-chat-modal [dreamText]="currentEntry()!.dreamText" (close)="closeChatModal()"></app-chat-modal>
+  }
+</main>
